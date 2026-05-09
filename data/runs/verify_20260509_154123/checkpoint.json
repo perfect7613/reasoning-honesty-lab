@@ -1,0 +1,5 @@
+{
+  "sampler_path": "tinker://b1bf84e2-7028-5055-b835-0401be12912c:train:0/sampler_weights/verify_20260509_154123-final",
+  "state_path": "tinker://b1bf84e2-7028-5055-b835-0401be12912c:train:0/weights/verify_20260509_154123-state",
+  "training_run_id": "b1bf84e2-7028-5055-b835-0401be12912c:train:0"
+}

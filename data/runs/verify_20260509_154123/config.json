@@ -1,0 +1,12 @@
+{
+  "run_id": "verify_20260509_154123",
+  "model": "deepseek-ai/DeepSeek-V3.1",
+  "num_steps": 1,
+  "group_size": 1,
+  "learning_rate": 1e-05,
+  "lora_rank": 8,
+  "started_at": "2026-05-09T15:41:23.433990",
+  "problems": [
+    "math_001"
+  ]
+}

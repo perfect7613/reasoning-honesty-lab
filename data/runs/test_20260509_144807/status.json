@@ -1,0 +1,19 @@
+{
+  "run_id": "test_20260509_144807",
+  "status": "failed",
+  "current_step": 1,
+  "total_steps": 2,
+  "latest_metrics": {
+    "step": 1,
+    "mean_reward": 0.4323,
+    "accuracy": 0.5,
+    "mean_tts": 0.1462,
+    "mean_steps": 16.0,
+    "mean_decorative": 0.5208,
+    "timestamp": "2026-05-09T14:56:01.852872"
+  },
+  "logs": [
+    "step 1: reward=0.4323, acc=0.50, tts=0.1462, steps=16.0, decorative=0.52"
+  ],
+  "error": "Request failed: This TrainingClient is poisoned. We cannot run further operations against it. Please create a new TrainingClient from a checkpoint if you wish to continue. Failure reason: request FwdBwdRequest 20486c6c-a729-5691-9eef-4658a6489972:train:0:2 failed with error: Could not convert loss function inputs to array record. for self.request_id='20486c6c-a729-5691-9eef-4658a6489972:train:0:3' and expected type self.model_cls=<class 'tinker.types._pydantic_types.save_weights_for_sampler_response.SaveWeightsForSamplerResponseInternal'>"
+}

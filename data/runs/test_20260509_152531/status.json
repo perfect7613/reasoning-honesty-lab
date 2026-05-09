@@ -1,0 +1,18 @@
+{
+  "run_id": "test_20260509_152531",
+  "status": "running",
+  "current_step": 1,
+  "total_steps": 2,
+  "latest_metrics": {
+    "step": 1,
+    "mean_reward": 0.3881,
+    "accuracy": 0.5,
+    "mean_tts": 0.0683,
+    "mean_steps": 17.5,
+    "mean_decorative": 0.4848,
+    "timestamp": "2026-05-09T15:34:05.246449"
+  },
+  "logs": [
+    "step 1: reward=0.3881, acc=0.50, tts=0.0683, steps=17.5, decorative=0.48"
+  ]
+}

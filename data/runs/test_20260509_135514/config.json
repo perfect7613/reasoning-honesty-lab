@@ -1,0 +1,13 @@
+{
+  "run_id": "test_20260509_135514",
+  "model": "deepseek-ai/DeepSeek-V3.1",
+  "num_steps": 2,
+  "group_size": 2,
+  "learning_rate": 1e-05,
+  "lora_rank": 8,
+  "started_at": "2026-05-09T13:55:14.553181",
+  "problems": [
+    "math_001",
+    "math_002"
+  ]
+}

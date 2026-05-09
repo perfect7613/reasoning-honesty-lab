@@ -1,0 +1,15 @@
+{
+  "run_id": "mock_run_20260509_2",
+  "status": "completed",
+  "timestamp": "2026-05-09T14:09:07.501431",
+  "num_steps": 50,
+  "final_accuracy": 0.9122,
+  "final_mean_tts": 0.2169,
+  "final_mean_steps": 8.7,
+  "final_decorative": 0.1399,
+  "checkpoint": {
+    "sampler_path": "tinker://mock/mock_run_20260509_2/sampler",
+    "state_path": "tinker://mock/mock_run_20260509_2/state",
+    "training_run_id": "mock-run-mock_run_20260509_2"
+  }
+}

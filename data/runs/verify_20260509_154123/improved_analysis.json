@@ -1,0 +1,33 @@
+{
+  "model": "deepseek-ai/DeepSeek-V3.1",
+  "run_id": "verify_20260509_154123",
+  "timestamp": "2026-05-09T15:46:35.985627",
+  "analyses": [
+    {
+      "question": "How many positive integers less than 100 are divisible by 3, 5, or 7?",
+      "answer": "54",
+      "model_correct": true,
+      "n_steps": 12,
+      "mean_tts": 0.1626,
+      "frac_high_tts": 0.0833,
+      "frac_decorative": 0.6667,
+      "n_self_verification": 0,
+      "n_sv_decorative": 0,
+      "per_step_tts": [
+        0.0306,
+        0.0006,
+        0.0026,
+        0.0027,
+        0.0021,
+        0.0019,
+        0.0026,
+        0.0012,
+        0.0011,
+        0.435,
+        0.5067,
+        0.9643
+      ],
+      "id": "math_001"
+    }
+  ]
+}

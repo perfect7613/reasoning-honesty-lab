@@ -1,0 +1,19 @@
+{
+  "run_id": "verify_20260509_154123",
+  "status": "completed",
+  "current_step": 1,
+  "total_steps": 1,
+  "latest_metrics": {
+    "step": 1,
+    "mean_reward": 0.8714,
+    "accuracy": 1.0,
+    "mean_tts": 0.2064,
+    "mean_steps": 7.0,
+    "mean_decorative": 0.2857,
+    "timestamp": "2026-05-09T15:43:30.781940"
+  },
+  "logs": [
+    "step 1: reward=0.8714, acc=1.00, tts=0.2064, steps=7.0, decorative=0.29"
+  ],
+  "completed_at": "2026-05-09T15:43:30.784765"
+}

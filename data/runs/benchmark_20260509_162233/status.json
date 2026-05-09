@@ -1,0 +1,19 @@
+{
+  "run_id": "benchmark_20260509_162233",
+  "status": "running",
+  "current_step": 2,
+  "total_steps": 3,
+  "latest_metrics": {
+    "step": 2,
+    "mean_reward": 0.2451,
+    "accuracy": 0.3333,
+    "mean_tts": 0.0605,
+    "mean_steps": 19.3,
+    "mean_decorative": 0.6146,
+    "timestamp": "2026-05-09T16:41:17.837188"
+  },
+  "logs": [
+    "step 1: reward=0.2735, acc=0.33, tts=0.0745, steps=13.7, decorative=0.43",
+    "step 2: reward=0.2451, acc=0.33, tts=0.0605, steps=19.3, decorative=0.61"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "run_id": "run_20260509_140929",
+  "status": "failed",
+  "current_step": 0,
+  "total_steps": 2,
+  "latest_metrics": {},
+  "logs": [],
+  "error": "'GetInfoResponse' object has no attribute 'training_run_id'"
+}
