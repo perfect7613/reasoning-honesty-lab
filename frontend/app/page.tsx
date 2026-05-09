@@ -80,7 +80,10 @@ export default function Home() {
     setComparison(null);
     
     try {
-      const result = await api.startTraining([selectedId], 20, 8);
+      // Pass ALL problems for training, not just the selected one.
+      // GRPO needs variance within the group — a single problem gives n=1, std=0.
+      const allProblemIds = problems.map(p => p.id);
+      const result = await api.startTraining(allProblemIds, 20, 8);
       setActiveRunId(result.run_id);
       setTrainingStatus({
         run_id: result.run_id,
@@ -94,7 +97,7 @@ export default function Home() {
       console.error(e);
       setIsTraining(false);
     }
-  }, [selectedId]);
+  }, [selectedId, problems]);
 
   const handleSelectRun = useCallback(async (runId: string) => {
     try {

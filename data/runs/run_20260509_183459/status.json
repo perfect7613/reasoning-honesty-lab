@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20260509_183459",
+  "status": "running",
+  "current_step": 3,
+  "total_steps": 20,
+  "latest_metrics": {
+    "step": 3,
+    "mean_reward": -0.1,
+    "accuracy": 0.0,
+    "mean_tts": 0.0,
+    "mean_steps": 10.0,
+    "mean_decorative": 1.0,
+    "timestamp": "2026-05-09T18:45:11.708888"
+  },
+  "logs": [
+    "step 1: reward=-0.1000, acc=0.00, tts=0.0000, steps=27.0, decorative=1.00",
+    "step 2: reward=-0.0999, acc=0.00, tts=0.0000, steps=12.0, decorative=1.00",
+    "step 3: reward=-0.1000, acc=0.00, tts=0.0000, steps=10.0, decorative=1.00"
+  ]
+}
