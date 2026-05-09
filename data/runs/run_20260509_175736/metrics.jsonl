@@ -1,0 +1,7 @@
+{"step": 1, "mean_reward": 0.9, "accuracy": 1.0, "mean_tts": 0.1725, "mean_steps": 7.0, "mean_decorative": 0.0, "timestamp": "2026-05-09T17:59:34.663474"}
+{"step": 2, "mean_reward": 0.9, "accuracy": 1.0, "mean_tts": 0.2086, "mean_steps": 5.0, "mean_decorative": 0.0, "timestamp": "2026-05-09T18:01:05.903086"}
+{"step": 3, "mean_reward": 0.9, "accuracy": 1.0, "mean_tts": 0.1762, "mean_steps": 7.0, "mean_decorative": 0.0, "timestamp": "2026-05-09T18:02:53.012817"}
+{"step": 4, "mean_reward": 0.8985, "accuracy": 1.0, "mean_tts": 0.1492, "mean_steps": 7.0, "mean_decorative": 0.0, "timestamp": "2026-05-09T18:04:45.705092"}
+{"step": 5, "mean_reward": 0.9, "accuracy": 1.0, "mean_tts": 0.2039, "mean_steps": 6.0, "mean_decorative": 0.0, "timestamp": "2026-05-09T18:06:32.422750"}
+{"step": 6, "mean_reward": 0.8581, "accuracy": 1.0, "mean_tts": 0.1291, "mean_steps": 8.0, "mean_decorative": 0.0, "timestamp": "2026-05-09T18:08:49.180363"}
+{"step": 7, "mean_reward": 0.9, "accuracy": 1.0, "mean_tts": 0.1706, "mean_steps": 6.0, "mean_decorative": 0.0, "timestamp": "2026-05-09T18:10:33.675861"}

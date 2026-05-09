@@ -95,7 +95,7 @@ async def run_training(
                     sampling_params=tinker.SamplingParams(
                         stop=stop_seqs,
                         max_tokens=2048,
-                        temperature=0.7,
+                        temperature=0.8,
                     ),
                 )
 
@@ -113,10 +113,12 @@ async def run_training(
                         sampling_client, renderer, prob["question"], prob["answer"], thinking_text, seed=42
                     )
 
+                    step_texts = [s.step_text for s in tts_result.step_scores]
                     reward = compute_reward(
                         answer_correct=tts_result.model_correct,
                         mean_tts=tts_result.mean_tts,
                         decorative_fraction=tts_result.fraction_decorative,
+                        step_texts=step_texts,
                     )
 
                     rollouts.append({
@@ -129,6 +131,7 @@ async def run_training(
                         "mean_tts": tts_result.mean_tts,
                         "n_steps": len(tts_result.step_scores),
                         "frac_decorative": tts_result.fraction_decorative,
+                        "step_texts": step_texts,
                     })
 
                 except Exception as e:
@@ -149,6 +152,20 @@ async def run_training(
             rewards = [r["reward"] for r in rollouts]
             mean_reward = np.mean(rewards) if rewards else 0.0
             std_reward = np.std(rewards) if rewards else 1.0
+            
+            # Log group reward variance (critical for GRPO learning signal)
+            logger.info(
+                f"Group stats: n={len(rewards)}, mean={mean_reward:.4f}, "
+                f"std={std_reward:.4f}, min={min(rewards) if rewards else 0:.4f}, "
+                f"max={max(rewards) if rewards else 0:.4f}"
+            )
+            if std_reward < 0.05:
+                logger.warning(
+                    f"LOW VARIANCE: group_std={std_reward:.4f} < 0.05 — "
+                    "GRPO cannot learn with near-zero advantage. "
+                    "Try harder problems or higher temperature."
+                )
+            
             if std_reward < 1e-6:
                 std_reward = 1.0
 
