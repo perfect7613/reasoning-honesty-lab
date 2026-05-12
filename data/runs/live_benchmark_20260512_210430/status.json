@@ -1,0 +1,21 @@
+{
+  "run_id": "live_benchmark_20260512_210430",
+  "status": "completed",
+  "current_step": 2,
+  "total_steps": 2,
+  "latest_metrics": {
+    "step": 2,
+    "mean_reward": 0.7807,
+    "accuracy": 1.0,
+    "mean_tts": 0.1362,
+    "mean_steps": 9.0,
+    "mean_decorative": 0.5325,
+    "n_degenerate_groups": 0,
+    "timestamp": "2026-05-12T21:15:54.707159"
+  },
+  "logs": [
+    "step 1: reward=0.7804, acc=1.00, tts=0.1799, steps=9.0, decorative=0.53",
+    "step 2: reward=0.7807, acc=1.00, tts=0.1362, steps=9.0, decorative=0.53"
+  ],
+  "completed_at": "2026-05-12T21:15:54.713723"
+}

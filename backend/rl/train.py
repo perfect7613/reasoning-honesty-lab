@@ -12,14 +12,11 @@ import tinker
 import torch
 from tinker import TensorData
 from tinker_cookbook import model_info, renderers
-from tinker_cookbook.rl.train import _remove_mask
-from tinker_cookbook.supervised.common import (
-    create_rightshifted_model_input_and_leftshifted_targets,
-)
 from tinker_cookbook.tokenizer_utils import get_tokenizer
 
 import config
 from cache.store import append_jsonl, write_json
+from rl.grading import grade_response_exact
 from rl.reward import compute_reward
 from tts.scorer import compute_tts_for_cot
 
@@ -31,8 +28,11 @@ async def run_training(
     problems: list[dict],
     num_steps: int = 20,
     group_size: int = 8,
+    groups_per_batch: int = 2,
     learning_rate: float = 1e-5,
     lora_rank: int = 32,
+    max_tokens: int = 2048,
+    sampling_temperature: float = 0.8,
 ):
     """Run RL training loop with TTS-aware reward."""
     run_dir = config.RUNS_DIR / run_id
@@ -43,8 +43,11 @@ async def run_training(
         "model": config.BASE_MODEL,
         "num_steps": num_steps,
         "group_size": group_size,
+        "groups_per_batch": groups_per_batch,
         "learning_rate": learning_rate,
         "lora_rank": lora_rank,
+        "max_tokens": max_tokens,
+        "sampling_temperature": sampling_temperature,
         "started_at": datetime.now().isoformat(),
         "problems": [p["id"] for p in problems],
     }
@@ -79,11 +82,13 @@ async def run_training(
             )
             logger.info(f"Training run ID: {training_client.model_id}")
 
-            # Select problems for this step
-            selected_problems = random.sample(problems, min(group_size, len(problems)))
+            # Select prompt groups for this step. Each prompt gets group_size
+            # completions so advantages compare rollouts for the same problem.
+            selected_problems = random.sample(problems, min(groups_per_batch, len(problems)))
 
             # Generate rollouts and compute rewards
             rollouts = []
+            n_degenerate = 0
             for prob in selected_problems:
                 messages = [{"role": "user", "content": prob["question"]}]
                 prompt = renderer.build_generation_prompt(messages)
@@ -91,149 +96,127 @@ async def run_training(
 
                 result = await sampling_client.sample_async(
                     prompt=prompt,
-                    num_samples=1,
+                    num_samples=group_size,
                     sampling_params=tinker.SamplingParams(
                         stop=stop_seqs,
-                        max_tokens=2048,
-                        temperature=0.8,
+                        max_tokens=max_tokens,
+                        temperature=sampling_temperature,
                     ),
                 )
 
-                seq = result.sequences[0]
-                tokens = seq.tokens
-                logprobs = seq.logprobs  # From sampling, NOT compute_logprobs_async
-                text = tokenizer.decode(tokens)
+                group_rollouts = []
+                for seq in result.sequences:
+                    tokens = seq.tokens
+                    logprobs = seq.logprobs  # From sampling, NOT compute_logprobs_async
+                    text = tokenizer.decode(tokens)
 
-                # Compute TTS reward
-                try:
-                    think_match = re.search(r"<think>(.*?)</think>", text, re.DOTALL)
-                    thinking_text = think_match.group(1).strip() if think_match else text
+                    # Compute exact correctness and TTS shaping reward.
+                    try:
+                        think_match = re.search(r"<think>(.*?)</think>", text, re.DOTALL)
+                        thinking_text = think_match.group(1).strip() if think_match else text
 
-                    tts_result = await compute_tts_for_cot(
-                        sampling_client, renderer, prob["question"], prob["answer"], thinking_text, seed=42
-                    )
+                        tts_result = await compute_tts_for_cot(
+                            sampling_client, renderer, prob["question"], prob["answer"], thinking_text, seed=42
+                        )
 
-                    step_texts = [s.step_text for s in tts_result.step_scores]
-                    reward = compute_reward(
-                        answer_correct=tts_result.model_correct,
-                        mean_tts=tts_result.mean_tts,
-                        decorative_fraction=tts_result.fraction_decorative,
-                        step_texts=step_texts,
-                    )
+                        exact_correct = grade_response_exact(text, prob["answer"])
+                        step_texts = [s.step_text for s in tts_result.step_scores]
+                        reward = compute_reward(
+                            answer_correct=exact_correct,
+                            mean_tts=tts_result.mean_tts,
+                            decorative_fraction=tts_result.fraction_decorative,
+                            step_texts=step_texts,
+                        )
 
-                    rollouts.append({
-                        "problem": prob,
-                        "tokens": tokens,
-                        "logprobs": logprobs,
-                        "text": text,
-                        "reward": reward,
-                        "correct": tts_result.model_correct,
-                        "mean_tts": tts_result.mean_tts,
-                        "n_steps": len(tts_result.step_scores),
-                        "frac_decorative": tts_result.fraction_decorative,
-                        "step_texts": step_texts,
-                    })
+                        group_rollouts.append({
+                            "problem": prob,
+                            "prompt": prompt,
+                            "tokens": tokens,
+                            "logprobs": logprobs,
+                            "text": text,
+                            "reward": reward,
+                            "correct": exact_correct,
+                            "mean_tts": tts_result.mean_tts,
+                            "n_steps": len(tts_result.step_scores),
+                            "frac_decorative": tts_result.fraction_decorative,
+                            "step_texts": step_texts,
+                        })
 
-                except Exception as e:
-                    logger.warning(f"TTS failed: {e}")
-                    rollouts.append({
-                        "problem": prob,
-                        "tokens": tokens,
-                        "logprobs": logprobs,
-                        "text": text,
-                        "reward": 0.0,
-                        "correct": False,
-                        "mean_tts": 0.0,
-                        "n_steps": 0,
-                        "frac_decorative": 1.0,
-                    })
+                    except Exception as e:
+                        logger.warning(f"TTS failed: {e}")
+                        group_rollouts.append({
+                            "problem": prob,
+                            "prompt": prompt,
+                            "tokens": tokens,
+                            "logprobs": logprobs,
+                            "text": text,
+                            "reward": -0.3,
+                            "correct": False,
+                            "mean_tts": 0.0,
+                            "n_steps": 0,
+                            "frac_decorative": 1.0,
+                            "step_texts": [],
+                        })
 
-            # Compute advantages (group-relative)
+                group_rewards = [r["reward"] for r in group_rollouts]
+                group_mean = float(np.mean(group_rewards)) if group_rewards else 0.0
+                group_advantages = [r - group_mean for r in group_rewards]
+                if group_advantages and all(abs(a) < 1e-6 for a in group_advantages):
+                    n_degenerate += 1
+                    logger.info(f"Skipping degenerate group for {prob['id']}: all rewards={group_mean:.4f}")
+                    continue
+
+                for rollout, advantage in zip(group_rollouts, group_advantages):
+                    rollout["advantage"] = advantage
+                    rollouts.append(rollout)
+
+            # Log batch reward variance (critical for learning signal)
             rewards = [r["reward"] for r in rollouts]
             mean_reward = np.mean(rewards) if rewards else 0.0
             std_reward = np.std(rewards) if rewards else 1.0
             
-            # Log group reward variance (critical for GRPO learning signal)
             logger.info(
-                f"Group stats: n={len(rewards)}, mean={mean_reward:.4f}, "
-                f"std={std_reward:.4f}, min={min(rewards) if rewards else 0:.4f}, "
-                f"max={max(rewards) if rewards else 0:.4f}"
+                f"Batch stats: n_rollouts={len(rewards)}, groups={len(selected_problems)}, "
+                f"degenerate={n_degenerate}, mean={mean_reward:.4f}, std={std_reward:.4f}, "
+                f"min={min(rewards) if rewards else 0:.4f}, max={max(rewards) if rewards else 0:.4f}"
             )
             if std_reward < 0.05:
                 logger.warning(
-                    f"LOW VARIANCE: group_std={std_reward:.4f} < 0.05 — "
+                    f"LOW VARIANCE: batch_std={std_reward:.4f} < 0.05 — "
                     "GRPO cannot learn with near-zero advantage. "
                     "Try harder problems or higher temperature."
                 )
-            
-            if std_reward < 1e-6:
-                std_reward = 1.0
-
-            for i, r in enumerate(rollouts):
-                r["advantage"] = (r["reward"] - mean_reward) / std_reward
 
             # Build training data using proper TensorData format
             data = []
             for rollout in rollouts:
+                prompt = rollout["prompt"]
                 tokens = rollout["tokens"]
-                logprobs = rollout["logprobs"]
+                logprobs = list(rollout["logprobs"])
                 advantage = rollout["advantage"]
 
-                if len(tokens) < 2 or len(logprobs) < len(tokens):
+                if len(tokens) < 2:
                     logger.warning(f"Skipping rollout: {len(tokens)} tokens, {len(logprobs)} logprobs")
                     continue
 
                 try:
-                    # Build full sequence as ModelInput chunks
-                    full_chunks = [tinker.EncodedTextChunk(tokens=tokens)]
-                    full_input = tinker.ModelInput(chunks=full_chunks)
+                    if len(logprobs) < len(tokens):
+                        logprobs.extend([0.0] * (len(tokens) - len(logprobs)))
+                    elif len(logprobs) > len(tokens):
+                        logprobs = logprobs[:len(tokens)]
 
-                    # Create right-shifted inputs and left-shifted targets
-                    input_model_input, target_tokens = create_rightshifted_model_input_and_leftshifted_targets(
-                        full_chunks
-                    )
-
-                    # Align logprobs: we need logprobs for each target token position
-                    # logprobs[i] corresponds to token[i+1], so logprobs[0] is for token[1]
-                    # target_tokens has length len(tokens)-1, aligned with input_model_input
-                    aligned_logprobs = logprobs[:len(target_tokens)]
-
-                    # Pad or truncate to match target_tokens length
-                    if len(aligned_logprobs) < len(target_tokens):
-                        aligned_logprobs.extend([0.0] * (len(target_tokens) - len(aligned_logprobs)))
-                    elif len(aligned_logprobs) > len(target_tokens):
-                        aligned_logprobs = aligned_logprobs[:len(target_tokens)]
-
-                    # Mask: 0 for prompt tokens, 1 for completion tokens
-                    # The prompt is everything before the assistant's response
-                    # For simplicity, we weight all tokens equally in the completion
-                    # (since we're doing full-sequence training on the model's own output)
-                    mask = [1.0] * len(target_tokens)
-                    advantages = [advantage] * len(target_tokens)
+                    model_input = prompt.append(tinker.EncodedTextChunk(tokens=tokens[:-1]))
+                    prompt_target_len = prompt.length - 1
+                    target_tokens = [0] * prompt_target_len + tokens
+                    padded_logprobs = [0.0] * prompt_target_len + logprobs
+                    padded_advantages = [0.0] * prompt_target_len + [advantage] * len(tokens)
 
                     datum = tinker.Datum(
-                        model_input=input_model_input,
+                        model_input=model_input,
                         loss_fn_inputs={
-                            "target_tokens": TensorData(
-                                data=target_tokens,
-                                dtype="int64",
-                                shape=[len(target_tokens)],
-                            ),
-                            "logprobs": TensorData(
-                                data=aligned_logprobs,
-                                dtype="float32",
-                                shape=[len(aligned_logprobs)],
-                            ),
-                            "advantages": TensorData(
-                                data=advantages,
-                                dtype="float32",
-                                shape=[len(advantages)],
-                            ),
-                            "mask": TensorData(
-                                data=mask,
-                                dtype="float32",
-                                shape=[len(mask)],
-                            ),
+                            "target_tokens": TensorData.from_torch(torch.tensor(target_tokens)),
+                            "logprobs": TensorData.from_torch(torch.tensor(padded_logprobs)),
+                            "advantages": TensorData.from_torch(torch.tensor(padded_advantages)),
                         },
                     )
                     data.append(datum)
@@ -245,9 +228,8 @@ async def run_training(
             if data:
                 logger.info(f"Updating model with {len(data)} examples...")
                 try:
-                    # Remove mask before forward_backward (as cookbook does)
                     fwd_result = await training_client.forward_backward_async(
-                        [_remove_mask(d) for d in data],
+                        data,
                         loss_fn="importance_sampling",
                     )
                     await fwd_result.result_async()
@@ -263,10 +245,10 @@ async def run_training(
                     # (the next iteration will create a fresh sampling client)
 
             # Log metrics
-            mean_tts = np.mean([r["mean_tts"] for r in rollouts])
-            accuracy = np.mean([1.0 if r["correct"] else 0.0 for r in rollouts])
-            mean_steps = np.mean([r["n_steps"] for r in rollouts])
-            mean_decorative = np.mean([r["frac_decorative"] for r in rollouts])
+            mean_tts = np.mean([r["mean_tts"] for r in rollouts]) if rollouts else 0.0
+            accuracy = np.mean([1.0 if r["correct"] else 0.0 for r in rollouts]) if rollouts else 0.0
+            mean_steps = np.mean([r["n_steps"] for r in rollouts]) if rollouts else 0.0
+            mean_decorative = np.mean([r["frac_decorative"] for r in rollouts]) if rollouts else 0.0
 
             metrics = {
                 "step": step + 1,
@@ -275,6 +257,7 @@ async def run_training(
                 "mean_tts": round(float(mean_tts), 4),
                 "mean_steps": round(float(mean_steps), 1),
                 "mean_decorative": round(float(mean_decorative), 4),
+                "n_degenerate_groups": n_degenerate,
                 "timestamp": datetime.now().isoformat(),
             }
 
@@ -339,7 +322,7 @@ async def run_training(
                     num_samples=1,
                     sampling_params=tinker.SamplingParams(
                         stop=stop_seqs,
-                        max_tokens=2048,
+                        max_tokens=max_tokens,
                         temperature=0.0,
                     ),
                 )
@@ -352,12 +335,15 @@ async def run_training(
                     trained_sampling_client, renderer, prob["question"], prob["answer"], thinking_text, seed=42
                 )
 
+                exact_correct = grade_response_exact(text, prob["answer"])
                 result_summary = tts_result.summary()
                 result_summary["id"] = prob["id"]
+                result_summary["early_exit_correct"] = tts_result.model_correct
+                result_summary["model_correct"] = exact_correct
                 analyses.append(result_summary)
 
                 logger.info(
-                    f"Post-train {prob['id']}: correct={tts_result.model_correct}, "
+                    f"Post-train {prob['id']}: correct={exact_correct}, "
                     f"steps={len(tts_result.step_scores)}, tts={tts_result.mean_tts:.4f}"
                 )
 

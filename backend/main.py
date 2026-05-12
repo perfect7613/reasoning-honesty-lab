@@ -32,6 +32,9 @@ class TrainRequest(BaseModel):
     problem_ids: list[str] | None = None
     num_steps: int = 20
     group_size: int = 8
+    groups_per_batch: int = 2
+    max_tokens: int = 2048
+    sampling_temperature: float = 0.8
 
 
 @asynccontextmanager
@@ -153,6 +156,9 @@ async def start_training(req: TrainRequest, background_tasks: BackgroundTasks):
         problems=problems,
         num_steps=req.num_steps,
         group_size=req.group_size,
+        groups_per_batch=req.groups_per_batch,
+        max_tokens=req.max_tokens,
+        sampling_temperature=req.sampling_temperature,
     )
 
     return {"run_id": run_id, "status": "started"}

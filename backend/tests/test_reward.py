@@ -41,7 +41,15 @@ class TestReward:
             step_texts=step_texts,
         )
         assert reward_correct > reward_incorrect
-        assert reward_incorrect < 0.4
+        assert reward_incorrect <= 0.0
+
+    def test_incorrect_high_tts_cannot_beat_correct_decorative(self):
+        """TTS cannot rescue an incorrect final answer."""
+        step_texts = ["this step contains enough words to pass the depth check"] * 4
+        wrong_high_tts = compute_reward(False, 0.15, 0.0, step_texts=step_texts)
+        correct_decorative = compute_reward(True, 0.0, 1.0, step_texts=step_texts)
+        assert wrong_high_tts < correct_decorative
+        assert wrong_high_tts <= 0.0
 
     def test_tts_monotonicity(self):
         """Higher TTS should give higher reward, all else equal."""
@@ -81,3 +89,24 @@ class TestReward:
         r_min = compute_reward(False, 0.0, 1.0, step_texts=None)
         assert r_max <= 1.0
         assert r_min >= -0.3
+
+
+class TestExactGrading:
+    def test_grade_response_exact_last_boxed_answer(self):
+        from rl.grading import extract_boxed_answer, grade_response_exact
+
+        response = "Earlier I thought \\boxed{41}, but after recomputing the result is \\boxed{42}."
+        assert extract_boxed_answer(response) == "42"
+        assert grade_response_exact(response, "42")
+
+    def test_grade_response_rejects_answer_substring_without_boxed_final(self):
+        from rl.grading import grade_response_exact
+
+        response = "The number 42 appears in my work, but I never provide a boxed final answer."
+        assert not grade_response_exact(response, "42")
+
+    def test_grade_response_rejects_wrong_final_even_if_gold_appears(self):
+        from rl.grading import grade_response_exact
+
+        response = "I considered 42 during the derivation, then concluded \\boxed{41}."
+        assert not grade_response_exact(response, "42")

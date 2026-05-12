@@ -6,23 +6,9 @@ import re
 from tinker_cookbook.rl.types import Env, StepResult
 from tinker_cookbook.renderers import Renderer
 
-from tts.scorer import compute_tts_for_cot
-from rl.reward import compute_reward
+from rl.grading import grade_response_exact
 
 logger = logging.getLogger(__name__)
-
-
-def extract_boxed_answer(text: str) -> str | None:
-    """Extract answer from \\boxed{} format."""
-    match = re.search(r"\\boxed\{(.*?)\}", text)
-    if match:
-        return match.group(1).strip()
-    return None
-
-
-def normalize_answer(ans: str) -> str:
-    """Normalize answer string for comparison."""
-    return ans.replace(" ", "").replace(",", "").lower()
 
 
 class TTSMathEnv(Env):
@@ -44,11 +30,7 @@ class TTSMathEnv(Env):
         """Parse model response, grade answer, compute TTS reward."""
         response_text = self.tokenizer.decode(action.tokens)
 
-        # Extract answer from boxed format
-        predicted = extract_boxed_answer(response_text)
-        is_correct = False
-        if predicted is not None:
-            is_correct = normalize_answer(predicted) == normalize_answer(self.answer)
+        is_correct = grade_response_exact(response_text, self.answer)
 
         # Extract thinking content
         think_match = re.search(r"<think>(.*?)</think>", response_text, re.DOTALL)

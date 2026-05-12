@@ -1,0 +1,5 @@
+{
+  "sampler_path": "tinker://6c21b930-6590-5104-b941-4213d64f2f06:train:0/sampler_weights/live_benchmark_20260512_210430-final",
+  "state_path": "tinker://6c21b930-6590-5104-b941-4213d64f2f06:train:0/weights/live_benchmark_20260512_210430-state",
+  "training_run_id": "6c21b930-6590-5104-b941-4213d64f2f06:train:0"
+}

@@ -150,3 +150,24 @@ class TestScorerMock:
 
         # First step is decorative (intro filler)
         assert result.step_scores[0].tts < 0.01
+
+    @pytest.mark.asyncio
+    async def test_compute_tts_keeps_raw_zero_for_long_decorative_step(self, monkeypatch):
+        """Raw TTS should not be floored just because a step is verbose."""
+        from tts.scorer import compute_tts_for_cot
+
+        async def mock_confidence(*args, **kwargs):
+            return 0.5
+
+        monkeypatch.setattr("tts.scorer.compute_early_exit_confidence", mock_confidence)
+
+        result = await compute_tts_for_cot(
+            sampling_client=None,
+            renderer=None,
+            question="What is 2+2?",
+            answer_str="4",
+            cot_text="This is a long decorative explanation with many words but no causal numerical content.",
+            seed=42,
+        )
+
+        assert result.step_scores[0].tts == 0.0

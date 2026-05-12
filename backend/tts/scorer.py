@@ -214,13 +214,6 @@ async def compute_tts_for_cot(
             f"SV={score.is_self_verification}"
         )
 
-    # Apply TTS floor to prevent "all decorative" collapse when model is wrong
-    # but still producing text. Steps with substantial content get baseline TTS.
-    TTS_FLOOR = 0.002
-    for score in step_scores:
-        if score.tts < TTS_FLOOR and len(score.step_text) > 30:
-            score.tts = TTS_FLOOR
-
     model_correct = step_scores[-1].s1_c1 > 0.5 if step_scores else False
 
     return TTSResult(

@@ -1,0 +1,15 @@
+{
+  "run_id": "live_benchmark_20260512_210430",
+  "model": "deepseek-ai/DeepSeek-V3.1",
+  "num_steps": 2,
+  "group_size": 2,
+  "groups_per_batch": 1,
+  "learning_rate": 1e-05,
+  "lora_rank": 8,
+  "max_tokens": 1024,
+  "sampling_temperature": 0.8,
+  "started_at": "2026-05-12T21:07:37.275927",
+  "problems": [
+    "math_m01"
+  ]
+}

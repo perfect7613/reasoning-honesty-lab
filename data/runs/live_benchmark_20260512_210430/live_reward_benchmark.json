@@ -1,0 +1,103 @@
+{
+  "run_id": "live_benchmark_20260512_210430",
+  "model": "deepseek-ai/DeepSeek-V3.1",
+  "timestamp": "2026-05-12T21:24:43.856458",
+  "train_problem_ids": [
+    "math_m01"
+  ],
+  "eval_problem_ids": [
+    "math_m01",
+    "math_m02"
+  ],
+  "params": {
+    "train_problems": 1,
+    "eval_problems": 2,
+    "steps": 2,
+    "group_size": 2,
+    "groups_per_batch": 1,
+    "max_tokens": 1024,
+    "learning_rate": 1e-05,
+    "lora_rank": 8
+  },
+  "checkpoint": {
+    "sampler_path": "tinker://6c21b930-6590-5104-b941-4213d64f2f06:train:0/sampler_weights/live_benchmark_20260512_210430-final",
+    "state_path": "tinker://6c21b930-6590-5104-b941-4213d64f2f06:train:0/weights/live_benchmark_20260512_210430-state",
+    "training_run_id": "6c21b930-6590-5104-b941-4213d64f2f06:train:0"
+  },
+  "base": {
+    "metrics": {
+      "accuracy": 0.5,
+      "mean_reward": 0.2599083750775509,
+      "mean_tts": 0.07201143885420616,
+      "mean_steps": 17.0,
+      "mean_decorative": 0.4486166007905138,
+      "frac_high_tts": 0.045454545454545456
+    },
+    "rows": [
+      {
+        "id": "math_m01",
+        "difficulty": "medium",
+        "correct": true,
+        "early_exit_correct": true,
+        "reward": 0.7459037066768409,
+        "mean_tts": 0.11481495127883182,
+        "n_steps": 11,
+        "decorative_fraction": 0.6363636363636364,
+        "frac_high_tts": 0.09090909090909091
+      },
+      {
+        "id": "math_m02",
+        "difficulty": "medium",
+        "correct": false,
+        "early_exit_correct": false,
+        "reward": -0.22608695652173916,
+        "mean_tts": 0.02920792642958049,
+        "n_steps": 23,
+        "decorative_fraction": 0.2608695652173913,
+        "frac_high_tts": 0.0
+      }
+    ]
+  },
+  "trained": {
+    "metrics": {
+      "accuracy": 0.5,
+      "mean_reward": 0.3197478991596639,
+      "mean_tts": 0.12330199606205518,
+      "mean_steps": 12.0,
+      "mean_decorative": 0.23109243697478993,
+      "frac_high_tts": 0.07142857142857142
+    },
+    "rows": [
+      {
+        "id": "math_m01",
+        "difficulty": "medium",
+        "correct": true,
+        "early_exit_correct": true,
+        "reward": 0.8571428571428572,
+        "mean_tts": 0.22731945599919673,
+        "n_steps": 7,
+        "decorative_fraction": 0.2857142857142857,
+        "frac_high_tts": 0.14285714285714285
+      },
+      {
+        "id": "math_m02",
+        "difficulty": "medium",
+        "correct": false,
+        "early_exit_correct": false,
+        "reward": -0.21764705882352942,
+        "mean_tts": 0.019284536124913636,
+        "n_steps": 17,
+        "decorative_fraction": 0.17647058823529413,
+        "frac_high_tts": 0.0
+      }
+    ]
+  },
+  "delta": {
+    "accuracy": 0.0,
+    "mean_reward": 0.059839524082113016,
+    "mean_tts": 0.051290557207849016,
+    "mean_steps": -5.0,
+    "mean_decorative": -0.21752416381572387,
+    "frac_high_tts": 0.02597402597402597
+  }
+}

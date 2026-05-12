@@ -9,6 +9,7 @@ from tinker_cookbook import model_info, renderers
 from tinker_cookbook.tokenizer_utils import get_tokenizer
 
 import config
+from rl.grading import grade_response_exact
 from rl.reward import compute_reward
 from tts.client import generate_cot_and_compute_tts
 
@@ -122,16 +123,18 @@ async def test_training_step():
             tts_result = await compute_tts_for_cot(
                 sampling_client, renderer, problem["question"], problem["answer"], thinking_text, seed=42
             )
+            exact_correct = grade_response_exact(rollout["text"], problem["answer"])
             
             reward = compute_reward(
-                answer_correct=tts_result.model_correct,
+                answer_correct=exact_correct,
                 mean_tts=tts_result.mean_tts,
                 decorative_fraction=tts_result.fraction_decorative,
+                step_texts=[s.step_text for s in tts_result.step_scores],
             )
             rewards.append(reward)
             
             logger.info(f"\nRollout {i+1}:")
-            logger.info(f"  Correct: {tts_result.model_correct}")
+            logger.info(f"  Correct: {exact_correct}")
             logger.info(f"  Steps: {len(tts_result.step_scores)}")
             logger.info(f"  Mean TTS: {tts_result.mean_tts:.4f}")
             logger.info(f"  Decorative: {tts_result.fraction_decorative:.1%}")

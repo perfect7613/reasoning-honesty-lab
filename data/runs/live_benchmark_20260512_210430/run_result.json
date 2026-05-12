@@ -1,0 +1,15 @@
+{
+  "run_id": "live_benchmark_20260512_210430",
+  "status": "completed",
+  "timestamp": "2026-05-12T21:19:07.674736",
+  "num_steps": 2,
+  "final_accuracy": 1.0,
+  "final_mean_tts": 0.13616386278175224,
+  "final_mean_steps": 9.0,
+  "final_decorative": 0.5324675324675324,
+  "checkpoint": {
+    "sampler_path": "tinker://6c21b930-6590-5104-b941-4213d64f2f06:train:0/sampler_weights/live_benchmark_20260512_210430-final",
+    "state_path": "tinker://6c21b930-6590-5104-b941-4213d64f2f06:train:0/weights/live_benchmark_20260512_210430-state",
+    "training_run_id": "6c21b930-6590-5104-b941-4213d64f2f06:train:0"
+  }
+}

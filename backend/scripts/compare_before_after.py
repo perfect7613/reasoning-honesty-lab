@@ -11,6 +11,8 @@ from tinker_cookbook import model_info, renderers
 from tinker_cookbook.tokenizer_utils import get_tokenizer
 
 import config
+from rl.grading import grade_response_exact
+from rl.reward import compute_reward
 from rl.train import run_training
 from tts.scorer import compute_tts_for_cot
 
@@ -52,16 +54,20 @@ async def evaluate_model(service_client, model_path, problems, tokenizer, render
             tts_result = await compute_tts_for_cot(
                 sampling_client, renderer, prob["question"], prob["answer"], thinking_text, seed=42
             )
+            exact_correct = grade_response_exact(text, prob["answer"])
             
             results.append({
                 "id": prob["id"],
-                "correct": tts_result.model_correct,
+                "correct": exact_correct,
                 "mean_tts": tts_result.mean_tts,
                 "n_steps": len(tts_result.step_scores),
                 "decorative_frac": tts_result.fraction_decorative,
-                "reward": 0.6 * (1.0 if tts_result.model_correct else 0.0) + 
-                         0.3 * min(tts_result.mean_tts / 0.15, 1.0) -
-                         0.1 * tts_result.fraction_decorative,
+                "reward": compute_reward(
+                    answer_correct=exact_correct,
+                    mean_tts=tts_result.mean_tts,
+                    decorative_fraction=tts_result.fraction_decorative,
+                    step_texts=[s.step_text for s in tts_result.step_scores],
+                ),
             })
         except Exception as e:
             logger.error(f"Eval failed for {prob['id']}: {e}")

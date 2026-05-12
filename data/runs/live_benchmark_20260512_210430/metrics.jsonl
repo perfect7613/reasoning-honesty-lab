@@ -1,0 +1,2 @@
+{"step": 1, "mean_reward": 0.7804, "accuracy": 1.0, "mean_tts": 0.1799, "mean_steps": 9.0, "mean_decorative": 0.5325, "n_degenerate_groups": 0, "timestamp": "2026-05-12T21:11:58.500278"}
+{"step": 2, "mean_reward": 0.7807, "accuracy": 1.0, "mean_tts": 0.1362, "mean_steps": 9.0, "mean_decorative": 0.5325, "n_degenerate_groups": 0, "timestamp": "2026-05-12T21:15:54.707159"}
